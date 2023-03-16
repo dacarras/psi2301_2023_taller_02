@@ -301,6 +301,95 @@ knitr::kable(., digits = 2)
   - 13% de los casos estaría en riesgo de depresión (datos confirmatorios)  
 
 
+
+## Ejercicio 9. Descriptivos de dispersion
+
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# descriptivos
+#------------------------------------------------------------------------------
+
+# -------------------------------------
+# medidas de variabilidad
+# -------------------------------------
+
+data_con %>%
+mutate(sexo = case_when(
+P1_2 == 1 ~ 'mujeres',
+P1_2 == 2 ~ 'hombres'
+)) %>%
+group_by(sexo) %>%
+summarize(
+minimo = min(PH_depresion, na.rm = TRUE),
+maximo = max(PH_depresion, na.rm = TRUE),
+percentil_25 = quantile(PH_depresion, probs = .25, na.rm = TRUE),
+percentil_75 = quantile(PH_depresion, probs = .75, na.rm = TRUE),
+desviacion_estandar = sd(PH_depresion, na.rm = TRUE),
+varianza = var(PH_depresion, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+# -------------------------------------
+# medidas de variabilidad
+# -------------------------------------
+
+data_con %>%
+mutate(sexo = case_when(
+P1_2 == 1 ~ 'mujeres',
+P1_2 == 2 ~ 'hombres'
+)) %>%
+group_by(sexo) %>%
+summarize(
+minimo = min(PH_depresion, na.rm = TRUE),
+maximo = max(PH_depresion, na.rm = TRUE),
+percentil_25 = quantile(PH_depresion, probs = .25, na.rm = TRUE),
+percentil_75 = quantile(PH_depresion, probs = .75, na.rm = TRUE),
+desviacion_estandar = sd(PH_depresion, na.rm = TRUE),
+varianza = var(PH_depresion, na.rm = TRUE)
+) %>%
+# calculando con datos obtenidos
+mutate(rango = maximo - minimo) %>%
+mutate(rango_intercuartil = percentil_75 - percentil_25) %>%
+knitr::kable(., digits = 2)
+
+
+# rango intercuartil
+IQR(data_con$PH_depresion, na.rm = TRUE)
+
+# -------------------------------------
+# voltear tabla
+# -------------------------------------
+
+data_con %>%
+mutate(sexo = case_when(
+P1_2 == 1 ~ 'mujeres',
+P1_2 == 2 ~ 'hombres'
+)) %>%
+group_by(sexo) %>%
+summarize(
+minimo = min(PH_depresion, na.rm = TRUE),
+maximo = max(PH_depresion, na.rm = TRUE),
+percentil_25 = quantile(PH_depresion, probs = .25, na.rm = TRUE),
+percentil_75 = quantile(PH_depresion, probs = .75, na.rm = TRUE),
+desviacion_estandar = sd(PH_depresion, na.rm = TRUE),
+varianza = var(PH_depresion, na.rm = TRUE)
+) %>%
+mutate(rango = maximo - minimo) %>%
+mutate(rango_intercuartil = percentil_75 - percentil_25) %>%
+tidyr::pivot_longer(
+cols = -sexo,
+names_to = 'stat_name',
+values_to = 'stat_value',
+) %>%
+knitr::kable(., digits = 2)
+
+```
+
+
+
+
 ## Ejercicio 10. Contigencia
 
 - Similares a las expectativas anterioes, se plantea que la prevalencia de depresión es mayor en mujeres. Calcule una tabla de contigencia donde se obtenga la proporción de mujeres y de hombres respectivamente.
