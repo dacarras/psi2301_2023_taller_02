@@ -1,0 +1,368 @@
+---
+title: "Taller 02"
+subtitle: "Descriptivos con `dplyr`"
+date: '`r format(Sys.time(), "%a %b %d, %Y")`'
+author: "dacarras"
+output:
+  github_document
+---
+
+# Introducción
+
+- La siguiente tarea contiene una serie de ejercicios en que vamos a producir resultados descriptivos.
+
+- Vamos a emplear una copia de los datos del estudio de Poli victimizacion de Jovenes, realizada en Chile en Octubre de 2017.
+
+- El link para cargar los datos, es el siguiente
+
+```
+
+'https://github.com/dacarras/psi4035_examples/raw/master/data/data_poly_all.rds'
+
+```
+
+- **Advertencia**: Los datos originales provienen de una muestra probabilística. Este tipo de datos, permite realizar inferencias a la población, si la información del diseño es empleada para producir estimaciones. En este ejercicio con fines ilustrativos, vamos a ignorar este aspecto, y solo vamos a producir resultados descriptivos.
+
+# Referencias
+
+Alvarez, E., Guajardo, H., & Messen, R. (1986). Estudio exploratorio sobre una escala de autoevaluación para la depresión en niños y adolescentes. Revista Chilena de Pediatria, 57(1), 21–25. https://doi.org/10.4067/s0370-41061986000100003
+
+Birleson, P., Hudson, I., Buchanan, D. G., & Wolff, S. (1987). Clinical Evaluation of a Self‐Rating Scale for Depressive Disorder in Childhood (Depression Self‐Rating Scale). Journal of Child Psychology and Psychiatry, 28(1), 43–60. https://doi.org/10.1111/j.1469-7610.1987.tb00651.x
+
+Consejo Nacional de la Infancia. (2018). Análisis Multivariable de Estudio de Polivictimización en Niños, Niñas y Adolescentes realizado por la Pontificia Universidad Católica de Chile. http://biblioteca.digital.gob.cl/handle/123456789/3535
+
+Denda, K., Kako, Y., Kitagawa, N., & Koyama, T. (2006). Assessment of depressive symptoms in Japanese school children and adolescents using the birleson depression self-rating scale. International Journal of Psychiatry in Medicine, 36(2), 231–241. https://doi.org/10.2190/3YCX-H0MT-49DK-C61Q
+
+
+MINSAL. (2013). Guía Clínica para el tratamiento de adolescentes de 10 a 14 años con Depresión. https://www.guiadisc.com/wp-content/pdfs/guia-clinica-tratamiento-depresion-adolescentes.pdf
+
+Subsecretaria Prevención del Delito. (2018). Primera Encuesta Nacional de Polivictimización en Niñas, Niños y Adolescentes: Presentación de Resultados.
+- El siguiente documento es una colección breve de funciones básicas para producir resultados.
+
+- Existen diferentes maneras de producir resultados en r. En este curso, emplearemos la generación de resultados mediante códigos reproducibles. Es decir, que son códigos que pueden ser ejecutados, y debieran producir el mismo resultado en diferentes equipos, y en diferentes momentos.
+
+- Para lograr lo anterior, el código escrito debe cumplir ciertas características. Una de ellas, es que la secuencia de comandos empleados pueda ser ejecutada por un documento dinámico. El presente código esta escrito de esta forma. Una vez ejecutado, debiera poder ejecutarse completo, y producir un output en html.
+
+- En particular, vamos a revisar diferentes funciones en `R` para abrir datos, y para manejar datos. Emplearemos funciones de R base, y de la libreria `dplyr`, la cual es una librería muy versatil para el manejo de datos (ver *[cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)*)
+
+
+# Librerias que vamos a emplear
+
+```{r , echo = TRUE, eval = FALSE}
+
+#------------------------------------------------------------------------------
+# instalar librerias
+#------------------------------------------------------------------------------
+
+#----------------------------------------------------------
+# librerias
+#----------------------------------------------------------
+
+install.packages('tidyverse') # incluye a dplyr y ggplot2
+                              # junto a otras librerias útiles
+
+install.packages('dplyr')     # para manejo de datos
+
+install.packages('knitr')     # para mostrar tablas como texto plano
+
+install.packages("moments")   # para obtener asimetria
+
+```
+
+
+# Ejercicio 1. Abrir datos
+
+## Abrir datos desde url
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# abrir datos desde archivo en una url
+#------------------------------------------------------------------------------
+
+#----------------------------------------------------------
+# url datos
+#----------------------------------------------------------
+
+url_location <- url('https://github.com/dacarras/psi4035_examples/raw/master/data/data_poly_all.rds')
+
+#--------------------------------------
+# abrir datos
+#--------------------------------------
+
+data_poly <- readRDS(url_location)
+
+```
+
+# Ejercicio 2. Inspeccionar datos
+
+## Vista rápida de datos
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# inspeccionar session
+#------------------------------------------------------------------------------
+
+#----------------------------------------------------------
+# lista de objetos creados
+#----------------------------------------------------------
+
+dplyr::glimpse(data_poly)
+
+```
+
+
+
+# Ejercicio 3. Crear subconjuntos de datos
+
+## Crear datos exploratorios y confirmatorios (Submuestra de .50%)
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# sample
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# 50% de los datos
+#--------------------------------------
+
+set.seed(20230316) # se usa fecha, en vez de RUT
+
+library(dplyr)
+data_exp <- dplyr::slice_sample(data_poly, prop = .5, by = region)
+
+#--------------------------------------
+# 50% de los otros datos
+#--------------------------------------
+
+data_con <- dplyr::filter(data_poly, !folio %in% data_exp$folio)
+
+
+```
+
+
+
+# Ejercicio 4. Visualizar distribución
+
+## Histograma y Skewness
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# visualizacion
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# histograma
+#--------------------------------------
+
+hist(data_exp$PH_depresion,
+  main = 'Histograma de puntajes de Depresión (Escala de Birleson)',
+  xlab = 'Puntajes')
+
+#--------------------------------------
+# skewness
+#--------------------------------------
+
+moments::skewness(data_exp$PH_depresion, na.rm = TRUE)
+
+#--------------------------------------
+# skewness mostrar inverso
+#--------------------------------------
+
+moments::skewness(r4sda::reverse(data_exp$PH_depresion), na.rm = TRUE)
+
+#--------------------------------------
+# histograma, inverso
+#--------------------------------------
+
+hist(r4sda::reverse(data_exp$PH_depresion),
+  main = 'Histograma de puntajes de Depresión (Escala de Birleson)\npuntajes invertidos',
+  xlab = 'Puntajes')
+
+```
+
+
+- **Descripción**
+  - Los puntajes de depresión presentan una distribución **asimétrica positiva**.
+  - Hay una mayor cola de resultados extendidos entre las observaciones de mayor valor.
+  - A medida que aumentan los valores observados, la cantidad de casos observados disminuye.
+  - La prevalencia observada disminuye a medida que los puntajes aumemtan
+
+## Boxplot
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# visualizacion
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# histograma
+#--------------------------------------
+
+boxplot(PH_depresion ~ region, 
+  data = data_poly,
+  horizontal = TRUE
+  )
+
+```
+
+## Ejercicio 6. Medidas de tendencia central y de posición
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# muestreo de casos
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# medidas de tendencia central
+#--------------------------------------
+
+library(dplyr)
+data_exp %>%
+summarize(
+media   = mean(PH_depresion, na.rm = TRUE),
+mediana = median(PH_depresion, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+#--------------------------------------
+# percentiles
+#--------------------------------------
+
+library(dplyr)
+data_exp %>%
+summarize(
+p05  = quantile(PH_depresion, probs = .05, na.rm = TRUE),
+p10  = quantile(PH_depresion, probs = .10, na.rm = TRUE),
+p25  = quantile(PH_depresion, probs = .25, na.rm = TRUE),
+p50  = quantile(PH_depresion, probs = .50, na.rm = TRUE),
+p75  = quantile(PH_depresion, probs = .75, na.rm = TRUE),
+p90  = quantile(PH_depresion, probs = .90, na.rm = TRUE),
+p95  = quantile(PH_depresion, probs = .95, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+```
+
+
+## Ejercicio 7. Interpretacion de percentiles.
+
+- Empleando el criterio de corte de 19 puntos (MINSAL, 2013), al menos 10% de los casos estaría en riesgo de depresion.
+- Si se emplea el criterio de Denda et al (2006), de 15 puntos, al menos 25% de los jóvenes estaría en riesgo de depresion.
+
+## Ejercicio 8. Recodificación y Proporción.
+
+- **¿Qué proporción de casos tiene depresión?**
+
+```{r , echo=TRUE, warning=FALSE}
+
+#------------------------------------------------------------------------------
+# recodificacion
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# con case_when
+#--------------------------------------
+
+library(dplyr)
+data_exp %>%
+mutate(depresion = case_when(
+PH_depresion >= 19 ~ 1,
+PH_depresion <  19 ~ 0
+)) %>%
+summarize(
+  depresion = mean(depresion, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+#--------------------------------------
+# con if_else
+#--------------------------------------
+
+library(dplyr)
+data_con %>%
+mutate(depresion = dplyr::if_else(PH_depresion >= 19, 1, 0)) %>%
+summarize(
+  depresion = mean(depresion, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+
+
+```
+
+- **Respuesta**
+  - 15% de los casos estaría en riesgo de depresión (datos exploratorios)
+  - 13% de los casos estaría en riesgo de depresión (datos confirmatorios)  
+
+
+## Ejercicio 10. Contigencia
+
+- Similares a las expectativas anterioes, se plantea que la prevalencia de depresión es mayor en mujeres. Calcule una tabla de contigencia donde se obtenga la proporción de mujeres y de hombres respectivamente.
+
+- Emplee la variable creada en el ejercicio 8, la cual clasifica a los casos con o sin riesgo de depresión, empleando el puntaje de corte emmpleado en Chile (19 puntos o más).
+
+```{r}
+
+#------------------------------------------------------------------------------
+# tabla de contingencia
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# prepar datos
+#--------------------------------------
+
+data_model <- data_exp %>%
+mutate(depresion = case_when(
+PH_depresion >= 19 ~ 1,
+PH_depresion <  19 ~ 0
+)) %>%
+mutate(sexo = case_when(
+P1_2 == 1 ~ 'mujeres',
+P1_2 == 2 ~ 'hombres'
+)) %>%
+dplyr::glimpse()
+
+#--------------------------------------
+# tabla de contingencia
+#--------------------------------------
+
+# metodo 1
+prop.table(xtabs(~ depresion + sexo, data = data_model), 2)
+
+# Nota: por convención, las tablas de contigencia incluyen a la variable de respuesta
+#       entre las filas, como en el metodo 1.
+
+
+```
+
+## Ejercicio 11. Promedio por grupo.
+
+- La polivictimización (variable `poli_vida`) es un factor de riesgo de calidad de vida grave. Esta, identifica a las personas que han vivenciado diferentes formas de violencia durante su trayectoria vital. Esto puede incluir asaltos con violencia, abusos por parte de cuidadores, por parte de pares, abuso sexual, entre otras formas de acoso.
+
+- Qué proporcion de "polivictimas" y "no polivictimas" se encontraría en riesgo de depresión (19 puntos o más).
+
+```{r}
+
+#------------------------------------------------------------------------------
+# promedio por grupo de dummy
+#------------------------------------------------------------------------------
+
+#--------------------------------------
+# depresion
+#--------------------------------------
+
+data_model %>%
+group_by(poli_vida) %>%
+summarize(
+media   = mean(depresion, na.rm = TRUE)
+) %>%
+knitr::kable(., digits = 2)
+
+
+```
